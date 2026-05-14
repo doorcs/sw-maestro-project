@@ -1,4 +1,22 @@
-## 서버 실행 가이드
+## 서버 실행 가이드 (Docker Compose)
+
+```shell
+# 저장소 클론 및 디렉토리 이동
+git clone https://github.com/soma17th-ai21/be-ai.git && cd ./be-ai
+
+# .env 파일 생성
+cp .env.example .env
+
+###########################################################################
+#####       생성된 .env 파일에 네이버 검색 API 키, 업스테이지 API 키 채우기       #####
+##### ( `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `UPSTAGE_API_KEY` ) #####
+###########################################################################
+
+# 자동으로 필요한 데이터 수집을 끝낸 뒤 API 서버가 실행됩니다
+docker compose up --build
+```
+
+## 서버 실행 가이드 (uv)
 
 ```shell
 # 저장소 클론 및 디렉토리 이동

@@ -118,6 +118,8 @@ export function useChat() {
             sector: variables.sectorCode ?? null,
             beginner_summary: data.answer,
             key_evidence: [],
+            indicators: [],
+            sources: [],
             confidence: 0.5,
             caution: data.safety_notice ?? "",
             warnings: data.warnings,

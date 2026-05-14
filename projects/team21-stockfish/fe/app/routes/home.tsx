@@ -79,25 +79,26 @@ export default function Home() {
           }
 
           if (msg.type === "sector_analysis_card") {
-            const { beginner_summary, key_evidence, confidence, caution, warnings } = msg.data;
-            const intent = (confidence >= 0.5 ? "success" : "danger") as "success" | "danger";
-            const newsList = key_evidence
-              .filter((e) => e.source !== null)
-              .map((e, idx) => ({
-                id: idx,
-                title: e.source!.title,
-                source: e.source!.provider,
-                url: e.source!.url,
-                intent,
-              }));
+            const { beginner_summary, key_evidence, indicators, confidence, caution, warnings } =
+              msg.data;
+            const negCount = indicators.filter((i) => i.intent === "negative").length;
+            const posCount = indicators.filter((i) => i.intent === "positive").length;
+            const intent =
+              negCount > posCount
+                ? "danger"
+                : posCount > negCount
+                  ? "success"
+                  : confidence >= 0.5
+                    ? "success"
+                    : "danger";
             return (
               <Message key={msg.id} role="assistant">
                 <SectorAnalysisCard
-                  intent={intent}
-                  title={`${msg.data.sector === "semiconductor" ? "반도체" : "제약"} 섹터 분석`}
+                  intent={intent as "success" | "danger"}
+                  title={`${msg.data.sector === "semiconductor" ? "반도체" : msg.data.sector === "pharmaceutical" ? "제약" : ""} 섹터 분석`.trim()}
                   summary={beginner_summary}
-                  indicators={[]}
-                  newsList={newsList}
+                  indicators={indicators.map((ind, i) => ({ id: i, ...ind }))}
+                  keyEvidence={key_evidence.map((e, i) => ({ id: i, ...e }))}
                 />
                 {caution && <p className="text-xs text-neutral-400 leading-4 px-1">※ {caution}</p>}
                 {warnings.length > 0 && (

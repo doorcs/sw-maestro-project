@@ -36,3 +36,29 @@ npm run dev
 | 변수명              | 설명                 | 기본값                  |
 | ------------------- | -------------------- | ----------------------- |
 | `VITE_API_BASE_URL` | 백엔드 API 서버 주소 | `http://127.0.0.1:8000` |
+
+## Docker 빌드 및 실행 절차
+
+### 사전 준비
+
+- Docker 설치 필요
+
+### 빌드
+
+```bash
+docker build -t soma17th-ai21 .
+```
+
+### 실행
+
+```bash
+docker run -p 3000:3000 soma17th-ai21
+```
+
+브라우저에서 `http://localhost:3000`으로 접속합니다.
+
+백엔드 API 서버 주소를 지정하려면 환경 변수를 함께 전달합니다.
+
+```bash
+docker run -p 3000:3000 -e VITE_API_BASE_URL=http://<백엔드-주소>:8000 soma17th-ai21
+```

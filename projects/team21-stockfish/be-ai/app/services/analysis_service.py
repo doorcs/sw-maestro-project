@@ -4,13 +4,15 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.graph import run_agent
-from app.ai.state import AgentState
+from app.ai.state import AgentState, IndicatorContext
 from app.core.errors import AnalysisConfidenceError
 from app.models.analysis import AnalysisResult
 from app.models.enums import RequestType, SECTOR_LABELS, SectorCode
 from app.repositories.analysis_repository import AnalysisRepository
-from app.schemas.analysis import KeyEvidence, SectorAnalysisResponse
+from app.schemas.analysis import AnalysisIndicator, KeyEvidence, SectorAnalysisResponse
 from app.schemas.common import SourceInfo, WarningMessage
+from app.services.analysis_indicator_presenter import build_analysis_indicators
+from app.services.context_service import ContextService
 
 
 AgentRunner = Callable[[AgentState], Awaitable[AgentState]]
@@ -48,7 +50,14 @@ class AnalysisService:
                 )
             )
             if cached_analysis is not None:
-                return _build_analysis_response(cached_analysis)
+                indicator_context = await self._build_indicator_context(
+                    sector=sector,
+                    reference_date=reference_date,
+                )
+                return _build_analysis_response(
+                    cached_analysis,
+                    indicators=build_analysis_indicators(indicator_context),
+                )
 
         state = await self._agent_runner(
             AgentState(
@@ -66,7 +75,23 @@ class AnalysisService:
             )
         )
         await self._session.commit()
-        return _build_analysis_response(analysis, warnings=state.warnings)
+        return _build_analysis_response(
+            analysis,
+            warnings=state.warnings,
+            indicators=build_analysis_indicators(state.indicator_context),
+        )
+
+    async def _build_indicator_context(
+        self,
+        *,
+        sector: SectorCode,
+        reference_date: date,
+    ) -> IndicatorContext | None:
+        context = await ContextService(self._session).build_sector_context(
+            sector,
+            reference_date=reference_date,
+        )
+        return IndicatorContext.model_validate(context.indicators.to_payload())
 
 
 def _build_sector_analysis_message(sector: SectorCode) -> str:
@@ -121,6 +146,7 @@ def _build_analysis_response(
     analysis: AnalysisResult,
     *,
     warnings: Sequence[WarningMessage] = (),
+    indicators: Sequence[AnalysisIndicator] = (),
 ) -> SectorAnalysisResponse:
     return SectorAnalysisResponse(
         sector=analysis.sector,
@@ -129,6 +155,7 @@ def _build_analysis_response(
             KeyEvidence.model_validate(evidence)
             for evidence in analysis.key_evidence
         ],
+        indicators=list(indicators),
         sources=[SourceInfo.model_validate(source) for source in analysis.sources],
         confidence=analysis.confidence,
         caution=analysis.caution,

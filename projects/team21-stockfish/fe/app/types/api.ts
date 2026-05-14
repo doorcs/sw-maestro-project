@@ -18,10 +18,18 @@ export interface KeyEvidence {
   source: SourceInfo | null;
 }
 
+export interface Indicator {
+  label: string;
+  value: string;
+  intent: "positive" | "negative" | "neutral";
+}
+
 export interface SectorAnalysisResponse {
   sector: SectorCode | null;
   beginner_summary: string;
   key_evidence: KeyEvidence[];
+  indicators: Indicator[];
+  sources: SourceInfo[];
   confidence: number;
   caution: string;
   warnings: WarningMessage[];

@@ -1,10 +1,5 @@
 import axios from "axios";
-import type {
-  SectorCode,
-  ChatRequest,
-  ChatResponse,
-  SectorAnalysisResponse,
-} from "~/types/api";
+import type { SectorCode, ChatRequest, ChatResponse, SectorAnalysisResponse } from "~/types/api";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -20,7 +15,7 @@ export const SECTOR_CODE_MAP: Record<string, SectorCode | undefined> = {
 
 export async function fetchSectorAnalysis(
   sector: SectorCode,
-  refresh = true,
+  refresh = false,
 ): Promise<SectorAnalysisResponse> {
   const { data } = await apiClient.get<SectorAnalysisResponse>(
     `/api/v1/sectors/${sector}/analysis`,
@@ -29,10 +24,7 @@ export async function fetchSectorAnalysis(
   return data;
 }
 
-export async function postChat(
-  body: ChatRequest,
-  refresh = true,
-): Promise<ChatResponse> {
+export async function postChat(body: ChatRequest, refresh = false): Promise<ChatResponse> {
   const { data } = await apiClient.post<ChatResponse>("/api/v1/chat", body, {
     params: { refresh },
   });

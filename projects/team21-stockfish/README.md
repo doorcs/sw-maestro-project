@@ -35,6 +35,8 @@ projects/team21-stockfish/
 │   │   ├── schemas/   # API 요청·응답 스키마
 │   │   └── services/  # 분석, 채팅, 컨텍스트, 수집 서비스
 │   ├── tests/
+│   ├── Dockerfile
+│   ├── compose.yaml
 │   ├── README.md
 │   └── pyproject.toml
 └── fe/                # React Router 기반 프론트엔드
@@ -44,6 +46,7 @@ projects/team21-stockfish/
     │   ├── routes/
     │   ├── types/
     │   └── utils/
+    ├── Dockerfile
     ├── README.md
     └── package.json
 ```
@@ -57,6 +60,7 @@ projects/team21-stockfish/
 | Data | yfinance, Naver News Search API, SQLite |
 | LLM | Upstage Chat Completions API (`solar-pro3` 기본값) |
 | Package manager | npm, uv |
+| Container | Docker, Docker Compose |
 
 ## 실행 준비
 
@@ -65,6 +69,7 @@ projects/team21-stockfish/
 - Node.js 20 이상
 - Python 3.14 이상
 - uv
+- Docker 및 Docker Compose (Docker 실행 시)
 - 네이버 검색 API 키
 - Upstage API 키
 
@@ -103,6 +108,40 @@ cp .env.example .env
 | 변수명 | 설명 | 기본값 |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | 백엔드 API 서버 주소 | `http://127.0.0.1:8000` |
+
+## Docker 실행
+
+### 1. BE-AI 서버 실행 (Docker Compose)
+
+`be-ai/compose.yaml`은 이미지를 빌드한 뒤 `collector` 서비스로 뉴스·주가 데이터를 먼저 수집하고, 수집이 끝나면 `api` 서비스를 실행합니다.
+
+```bash
+cd projects/team21-stockfish/be-ai
+cp .env.example .env
+# .env에 NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, UPSTAGE_API_KEY 등을 채웁니다.
+
+docker compose up --build
+```
+
+기본 API 서버 주소는 `http://127.0.0.1:8000`입니다. API 문서는 서버 실행 후 `http://127.0.0.1:8000/docs`에서 확인할 수 있습니다.
+
+### 2. FE 서버 실행 (Docker)
+
+FE Docker 이미지는 `fe/Dockerfile`로 빌드하며, 컨테이너는 기본적으로 3000번 포트에서 React Router 서버를 실행합니다.
+
+```bash
+cd projects/team21-stockfish/fe
+docker build -t soma17th-ai21 .
+docker run -p 3000:3000 soma17th-ai21
+```
+
+브라우저에서 `http://localhost:3000`으로 접속합니다.
+
+백엔드 API 서버 주소를 지정하려면 환경 변수를 함께 전달합니다.
+
+```bash
+docker run -p 3000:3000 -e VITE_API_BASE_URL=http://<백엔드-주소>:8000 soma17th-ai21
+```
 
 ## 로컬 실행
 
@@ -217,6 +256,18 @@ npm run build
 # BE 테스트
 cd projects/team21-stockfish/be-ai
 uv run pytest
+```
+
+```bash
+# BE-AI Docker 이미지 빌드 확인
+cd projects/team21-stockfish/be-ai
+docker compose build
+```
+
+```bash
+# FE Docker 이미지 빌드 확인
+cd projects/team21-stockfish/fe
+docker build -t soma17th-ai21 .
 ```
 
 ## 제출 전 확인
